@@ -7,6 +7,7 @@ import os
 import time
 import streamlit as st
 from dotenv import load_dotenv
+import streamlit.components.v1 as components
 
 load_dotenv()
 
@@ -76,39 +77,6 @@ h3 {
     font-weight: 500 !important;
 }
 
-div.stButton > button[kind="primary"] {
-    background-color: #10B981 !important;
-    color: white !important;
-    border-radius: 24px !important;
-    padding: 0.5rem 1.5rem !important;
-    border: none !important;
-    font-weight: 500 !important;
-    transition: all 0.2s ease;
-}
-div.stButton > button[kind="primary"]:hover {
-    background-color: #059669 !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
-}
-
-div.stButton > button[kind="secondary"] {
-    border-radius: 24px !important;
-    border: 1px solid #C4C7C5 !important;
-    background-color: transparent !important;
-    color: #1F1F1F !important;
-    font-weight: 500 !important;
-}
-div.stButton > button[kind="secondary"]:hover {
-    background-color: #E1E3E1 !important;
-}
-
-[data-testid="stVerticalBlockBorderWrapper"] {
-    border-radius: 24px !important;
-    border: 1px solid #E3E3E3 !important;
-    background-color: #FFFFFF !important;
-    box-shadow: none !important;
-    padding: 1.5rem !important;
-}
-
 .stTextArea textarea, .stTextInput input {
     border-radius: 16px !important;
     background-color: #F0F4F9 !important;
@@ -169,16 +137,6 @@ div[data-testid="stAlert"] {
 .priority-medium { background: #DBEAFE; color: #1E40AF; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
 .priority-low { background: #D1FAE5; color: #065F46; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
 
-/* Metric cards */
-[data-testid="stMetric"] {
-    background: #F0F4F9;
-    border: 1px solid #E3E3E3;
-    border-radius: 16px;
-    padding: 1rem;
-}
-[data-testid="stMetric"] [data-testid="stMetricValue"] {
-    color: #10B981 !important;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -194,6 +152,8 @@ defaults = {
     "assessment_results": None,
     "gap_analysis": None,
     "learning_plan": None,
+    "loaded_paths": [],
+    "current_gap_index": 0,
     "orchestrator": None,
     "chat_history": [],
     "awaiting_answer": False,
@@ -650,7 +610,7 @@ elif st.session_state.current_step == "assessment":
 # ══════════════════════════════════════════════
 elif st.session_state.current_step == "results":
     from app.agents.gap_analyzer import analyze_gaps
-    from app.agents.plan_generator import generate_learning_plan
+    from app.agents.plan_generator import generate_learning_plan_base, generate_paths_batch
     from app.models.schemas import GapAnalysisResult, PersonalizedLearningPlan, GapPriority
 
     if st.session_state.gap_analysis is None:
@@ -662,17 +622,31 @@ elif st.session_state.current_step == "results":
             )
 
     if st.session_state.learning_plan is None:
-        with st.spinner("Cooling down API limits before final generation..."):
-            time.sleep(30)
-        with st.spinner("Generating personalized learning plan..."):
-            st.session_state.learning_plan = generate_learning_plan(
+        with st.spinner("Analyzing high-level learning strategy..."):
+            st.session_state.learning_plan = generate_learning_plan_base(
                 st.session_state.parsed_resume,
                 st.session_state.parsed_jd,
                 st.session_state.gap_analysis,
             )
+        st.session_state.loaded_paths = []
+        st.session_state.current_gap_index = 0
 
     gap_analysis = st.session_state.gap_analysis
     learning_plan = st.session_state.learning_plan
+    
+    total_gaps = gap_analysis.gaps
+    batch_size = 3
+
+    # Load the first batch automatically
+    if st.session_state.current_gap_index == 0 and len(total_gaps) > 0:
+        with st.spinner("Generating your top priority learning paths..."):
+            first_batch = total_gaps[0:batch_size]
+            new_paths = generate_paths_batch(first_batch, st.session_state.parsed_jd.job_title)
+            st.session_state.loaded_paths.extend(new_paths)
+            st.session_state.current_gap_index += batch_size
+            
+            # Keep the main plan object synced for PDF generation
+            learning_plan.learning_paths = st.session_state.loaded_paths
 
     # ── Top Metrics ──
     col1, col2, col3, col4 = st.columns(4)
@@ -821,9 +795,9 @@ elif st.session_state.current_step == "results":
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── Learning Plan ──
+    # ── Learning Plan (Paginated) ──
     st.markdown("### Personalized Learning Plan")
-    for path in learning_plan.learning_paths:
+    for path in st.session_state.loaded_paths:
         priority_class = f"priority-{path.priority.value}"
         with st.container(border=True):
             st.markdown(
@@ -875,6 +849,30 @@ elif st.session_state.current_step == "results":
                 if i < len(path.milestones):
                     st.markdown("<hr style='margin: 0.8rem 0; border-color: #F5F5F5;'>", unsafe_allow_html=True)
 
+    # Pagination Button
+    if st.session_state.current_gap_index < len(total_gaps):
+        remaining = len(total_gaps) - st.session_state.current_gap_index
+        button_text = f"Generate Next {min(batch_size, remaining)} Paths 🚀"
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
+        with col_btn2:
+            if st.button(button_text, type="primary", use_container_width=True):
+                with st.spinner("Analyzing and generating next paths..."):
+                    start_idx = st.session_state.current_gap_index
+                    end_idx = start_idx + batch_size
+                    
+                    next_batch = total_gaps[start_idx:end_idx]
+                    new_paths = generate_paths_batch(next_batch, st.session_state.parsed_jd.job_title)
+                    
+                    st.session_state.loaded_paths.extend(new_paths)
+                    st.session_state.current_gap_index += batch_size
+                    
+                    # Sync to main object
+                    learning_plan.learning_paths = st.session_state.loaded_paths
+                    
+                    st.rerun()
+
     # ── PDF Export ──
     st.markdown("<br>", unsafe_allow_html=True)
     with st.container(border=True):
@@ -885,21 +883,22 @@ elif st.session_state.current_step == "results":
         with col_pdf2:
             if st.button("Generate PDF Report", type="primary", use_container_width=True):
                 with st.spinner("Generating PDF..."):
-                    from app.utils.pdf_generator import generate_pdf
+                    from app.utils.modern_pdf_generator import generate_pdf
+
                     pdf_bytes = generate_pdf(
-                        learning_plan=learning_plan,
-                        gap_analysis=gap_analysis,
-                        assessment_results=st.session_state.assessment_results or [],
+                        learning_plan,
+                        gap_analysis,
+                        st.session_state.assessment_results or []
                     )
+
                     st.session_state.pdf_bytes = pdf_bytes
 
             if "pdf_bytes" in st.session_state and st.session_state.pdf_bytes:
                 st.download_button(
-                    label="Download PDF",
-                    data=st.session_state.pdf_bytes,
-                    file_name=f"skill_assessment_{learning_plan.candidate_name.replace(' ', '_')}.pdf",
-                    mime="application/pdf",
-                    use_container_width=True,
+                    "Download PDF",
+                    st.session_state.pdf_bytes,
+                    file_name="report.pdf",
+                    mime="application/pdf"
                 )
 
     # ── Strengths Summary ──
@@ -908,3 +907,51 @@ elif st.session_state.current_step == "results":
         with st.container(border=True):
             st.markdown("### Remember Your Strengths")
             st.markdown(learning_plan.strengths_summary)
+
+components.html("""
+<script>
+function printPage() {
+    window.parent.print();
+}
+</script>
+
+<button onclick="printPage()" 
+style="
+    padding:10px 20px;
+    background:#10B981;
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:16px;
+">
+Download PDF
+</button>
+""", height=80)
+
+st.markdown("""
+<style>
+@media print {
+
+    /* Hide sidebar */
+    [data-testid="stSidebar"] {
+        display: none !important;
+    }
+
+    /* Hide header */
+    header {
+        display: none !important;
+    }
+
+    /* Remove padding */
+    .block-container {
+        padding: 0 !important;
+    }
+
+    /* Ensure full width */
+    .main {
+        width: 100% !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)

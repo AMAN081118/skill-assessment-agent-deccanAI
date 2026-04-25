@@ -55,7 +55,7 @@ _openrouter_limiter = RateLimiter(min_delay_seconds=4.0)
 def get_groq_llm(
     model: str = "openai/gpt-oss-120b",
     temperature: float = 0.3,
-    max_tokens: int = 1024,
+    max_tokens: int = 4000,
 ) -> ChatGroq:
     """Get a Groq LLM instance."""
     api_key = os.getenv("GROQ_API_KEY")
@@ -70,9 +70,9 @@ def get_groq_llm(
 
 
 def get_openrouter_llm(
-    model: str = "google/gemma-4-31b-it:free",
+    model: str = "openrouter/free",
     temperature: float = 0.3,
-    max_tokens: int = 9000,
+    max_tokens: int = 6000,
 ) -> ChatOpenAI:
     """
     Get an OpenRouter LLM instance.
@@ -99,7 +99,7 @@ def get_openrouter_llm(
 # ──────────────────────────────────────────────
 
 def get_parsing_llm() -> ChatOpenAI:
-    """LLM for parsing tasks. Uses OpenRouter Nemotron."""
+    """LLM for parsing tasks. Uses OpenRouter."""
     return get_openrouter_llm(
         temperature=0.1,
         max_tokens=4096,
@@ -111,23 +111,23 @@ def get_assessment_llm() -> ChatGroq:
     return get_groq_llm(
         model="openai/gpt-oss-120b",
         temperature=0.3,
-        max_tokens=1024,
+        max_tokens=1024, # 1024 is perfect for short chat responses
     )
 
 
 def get_analysis_llm() -> ChatOpenAI:
-    """LLM for gap analysis and learning plan. Uses OpenRouter Nemotron."""
+    """LLM for gap analysis and learning plan. Uses OpenRouter."""
     return get_openrouter_llm(
         temperature=0.3,
         max_tokens=8192,
     )
 
 def get_groq_analysis_llm() -> ChatGroq:
-    """High-token fallback for analysis tasks. Prevents the 'Unterminated string' error."""
+    """High-token fallback for parsing/analysis tasks."""
     return get_groq_llm(
-        model="llama-3.3-70b-versatile",
+        model="openai/gpt-oss-120b",
         temperature=0.3,
-        max_tokens=8000, # CRITICAL: Huge output limit for JSON
+        max_tokens=6000, # CRITICAL: Huge output limit needed for JSON parsing fallbacks
     )
 
 
@@ -140,11 +140,6 @@ def call_with_retry(messages, llm_type: str = "assessment", max_retries: int = 3
     Call an LLM with automatic retry and fallback chain.
 
     llm_type: "assessment" | "parsing" | "analysis"
-
-    Fallback chains:
-    - assessment: Groq -> OpenRouter
-    - parsing: OpenRouter -> Groq
-    - analysis: OpenRouter -> Groq
     """
     fallback_chains = {
         "assessment": [
@@ -153,11 +148,11 @@ def call_with_retry(messages, llm_type: str = "assessment", max_retries: int = 3
         ],
         "parsing": [
             ("openrouter", get_parsing_llm, _openrouter_limiter),
-            ("groq", get_assessment_llm, _groq_limiter),
+            ("groq", get_groq_analysis_llm, _groq_limiter), # <-- FIXED: Points to the 8000 token Groq model
         ],
         "analysis": [
             ("openrouter", get_analysis_llm, _openrouter_limiter),
-            ("groq", get_groq_analysis_llm, _groq_limiter), # <-- FIXED: Uses the 8000-token Groq fallback
+            ("groq", get_groq_analysis_llm, _groq_limiter), # <-- FIXED: Points to the 8000 token Groq model
         ],
     }
 
@@ -172,7 +167,14 @@ def call_with_retry(messages, llm_type: str = "assessment", max_retries: int = 3
 
                 llm = llm_factory()
                 response = llm.invoke(messages)
-                return response.content
+                
+                content = response.content
+                
+                # ---> THE FIX: Catch silent failures / empty strings
+                if not content or not content.strip():
+                    raise ValueError(f"{provider} returned an empty response.")
+                    
+                return content
 
             except Exception as e:
                 last_error = e
@@ -180,7 +182,7 @@ def call_with_retry(messages, llm_type: str = "assessment", max_retries: int = 3
 
                 # Rate limited -- wait and retry
                 if any(x in error_str for x in ["rate_limit", "429", "resource_exhausted", "too many"]):
-                    wait_time = (attempt + 1) * 15
+                    wait_time = (attempt + 1) * 5 # Reduced to 5/10/15 seconds so it fails over faster
                     print(
                         f"Rate limited on {provider}. "
                         f"Waiting {wait_time}s (attempt {attempt + 1}/{max_retries})..."
@@ -188,15 +190,15 @@ def call_with_retry(messages, llm_type: str = "assessment", max_retries: int = 3
                     time.sleep(wait_time)
                     continue
 
-                # Token limit -- skip to next provider
+                # Token limit -- skip to next provider immediately
                 if any(x in error_str for x in ["too large", "token", "context_length"]):
                     print(f"Token limit on {provider}. Trying next provider...")
                     break
 
                 # Other error -- retry once then next provider
                 if attempt < max_retries - 1:
-                    print(f"Error on {provider}: {e}. Retrying in 5s...")
-                    time.sleep(5)
+                    print(f"Error on {provider}: {e}. Retrying in 2s...")
+                    time.sleep(2)
                     continue
                 else:
                     break

@@ -1,8 +1,9 @@
 """
 Learning Plan Generator Agent -- Creates personalized learning paths.
 
-KEY DESIGN: Generates the entire learning plan in a SINGLE LLM call
-to minimize API requests and stay within free tier rate limits.
+KEY DESIGN: Uses Pagination/Lazy-Loading to generate detailed learning 
+paths in small batches (e.g., 3 at a time) to prevent LLM token limits 
+and avoid using generic hardcoded fallbacks.
 """
 
 import json
@@ -21,7 +22,6 @@ from app.models.schemas import (
     ProficiencyLevel,
     GapPriority,
 )
-
 
 # ──────────────────────────────────────────────
 # Resource Database Loader
@@ -89,45 +89,32 @@ def _get_curated_resources(
 
 
 # ──────────────────────────────────────────────
-# SINGLE BATCHED LLM call for all skill gaps
+# Batched LLM call for a specific slice of skill gaps
 # ──────────────────────────────────────────────
 
-BATCH_PLAN_PROMPT = """You are a technical learning advisor creating a personalized learning plan.
+BATCH_PLAN_PROMPT = """You are a technical learning advisor creating a personalized learning strategy.
 
 The candidate has the following skill gaps to address for the role of {target_role}:
 
 {gaps_description}
 
 CRITICAL OUTPUT CONSTRAINTS (TO PREVENT TOKEN LIMITS):
-1. MAX PATHS: Only generate detailed learning paths for the TOP 3 highest-priority skill gaps. Ignore the rest.
-2. MAX MILESTONES: Limit each learning path to exactly 2 milestones.
-3. MAX RESOURCES: Limit each milestone to exactly 2 highly relevant resources.
-4. CONCISENESS: Keep all descriptions, "why learn this", and summaries under 2 sentences. Be incredibly concise.
+1. MAX MILESTONES: Limit each learning path to exactly 2 milestones.
+2. CONCISENESS: Keep all descriptions and "why learn this" under 2 sentences. Be incredibly concise.
 
-For those top 3 skill gaps, generate a learning path. Respond with ONLY valid JSON matching this schema:
+Generate a learning path for EVERY skill gap listed above. Respond with ONLY valid JSON matching this schema:
 {{
   "paths": [
     {{
       "skill_name": "exact skill name from above",
       "why_learn": "1 sentence motivation",
-      "leverage_existing": ["how existing skill X helps", "how existing skill Y helps"],
+      "leverage_existing": ["how existing skill X helps"],
       "milestones": [
         {{
           "title": "milestone title",
           "description": "what the learner achieves",
           "target_level": "beginner|intermediate|advanced|expert",
-          "estimated_hours": number,
-          "resources": [
-            {{
-              "title": "resource name",
-              "url": "https://...",
-              "resource_type": "course|article|video|project|documentation",
-              "is_free": true,
-              "estimated_hours": number,
-              "description": "brief description"
-            }}
-          ],
-          "practice_project": "hands-on project description"
+          "practice_project": "1 sentence hands-on project description"
         }}
       ]
     }}
@@ -135,30 +122,21 @@ For those top 3 skill gaps, generate a learning path. Respond with ONLY valid JS
 }}
 
 Rules:
-- 1-2 milestones per skill MAXIMUM
-- 1-2 resources per milestone MAXIMUM
-- Prefer free resources (official docs, YouTube, GitHub repos, free courses)
-- Include practical projects at each milestone
-- Time estimates should be realistic
-- Leverage the candidate's existing skills where possible
-- No markdown, no extra text, ONLY JSON"""
+- DO NOT INCLUDE URLs OR LEARNING RESOURCES. You provide the strategy; the system will attach the resources later.
+- Leverage the candidate's existing skills where possible.
+- No markdown, no extra text, ONLY JSON."""
 
 
-def _generate_all_paths_with_llm(
-    gaps: list[SkillGap],
+def _generate_paths_with_llm(
+    gaps_batch: list[SkillGap],
     target_role: str,
 ) -> dict:
     """
-    Generate learning paths for ALL skill gaps in a single LLM call.
-    This is the key optimization -- 1 API call instead of N.
+    Generate learning paths for the specific batch of skill gaps provided.
     """
     gaps_description = ""
     
-    # Sort gaps by priority (assuming Priority Enum: CRITICAL is highest)
-    # We pass all of them so the LLM has context, but it will only process the top 3
-    sorted_gaps = sorted(gaps, key=lambda g: g.priority.value if hasattr(g.priority, 'value') else 0)
-    
-    for i, gap in enumerate(sorted_gaps, 1):
+    for i, gap in enumerate(gaps_batch, 1):
         adjacent_str = ", ".join(gap.adjacent_skills) if gap.adjacent_skills else "none identified"
         gaps_description += (
             f"{i}. {gap.skill_name}: "
@@ -175,13 +153,12 @@ def _generate_all_paths_with_llm(
 
     messages = [
         SystemMessage(content=prompt),
-        HumanMessage(content=f"Generate concise learning paths for the top 3 most critical skill gaps out of the {len(gaps)} provided."),
+        HumanMessage(content=f"Generate concise learning paths for ALL {len(gaps_batch)} skill gaps provided."),
     ]
 
     try:
         raw = call_with_retry(messages, llm_type="analysis")
 
-        # Clean markdown
         cleaned = raw.strip()
         if cleaned.startswith("```json"):
             cleaned = cleaned[7:]
@@ -204,174 +181,118 @@ def _generate_all_paths_with_llm(
 
 def _build_paths_from_llm_response(
     llm_data: dict,
-    gaps: list[SkillGap],
+    gaps_batch: list[SkillGap],
 ) -> list[SkillLearningPath]:
     """
-    Build SkillLearningPath objects from the batched LLM response,
-    enriched with curated resources.
+    Build paths using LLM strategy, injecting all resource links from local DB.
     """
-    # Index LLM paths by skill name
-    llm_paths_map = {}
-    for path_data in llm_data.get("paths", []):
-        name = path_data.get("skill_name", "").lower().strip()
-        llm_paths_map[name] = path_data
+    llm_paths_map = {
+        path_data.get("skill_name", "").lower().strip(): path_data 
+        for path_data in llm_data.get("paths", [])
+    }
 
     result = []
 
-    for gap in gaps:
+    for gap in gaps_batch:
         gap_name_lower = gap.skill_name.lower().strip()
-
-        # Find matching LLM path
-        llm_path = llm_paths_map.get(gap_name_lower)
-        if not llm_path:
-            # Try partial match
-            for key, val in llm_paths_map.items():
-                if gap_name_lower in key or key in gap_name_lower:
-                    llm_path = val
-                    break
-
-        # Get curated resources as supplement
-        curated = _get_curated_resources(
-            gap.skill_name, gap.current_level, gap.required_level
-        )
+        
+        # Fuzzy matching to find the LLM's path for this skill
+        llm_path = next((val for key, val in llm_paths_map.items() if gap_name_lower in key), None)
 
         if llm_path:
             milestones = []
             for m in llm_path.get("milestones", []):
-                resources = []
-                for r in m.get("resources", []):
-                    resources.append(LearningResource(
-                        title=r.get("title", ""),
-                        url=r.get("url", ""),
-                        resource_type=r.get("resource_type", "course"),
-                        is_free=r.get("is_free", True),
-                        estimated_hours=r.get("estimated_hours", 0),
-                        description=r.get("description", ""),
-                    ))
-
-                target_lvl = m.get("target_level", "intermediate")
+                
+                target_lvl_str = m.get("target_level", "intermediate")
                 try:
-                    target_level = ProficiencyLevel(target_lvl.lower())
+                    target_level = ProficiencyLevel(target_lvl_str.lower())
                 except ValueError:
                     target_level = ProficiencyLevel.INTERMEDIATE
+
+                # Inject resources from local JSON DB
+                curated_resources = _get_curated_resources(
+                    gap.skill_name, 
+                    gap.current_level, 
+                    target_level
+                )
+                
+                milestone_hours = sum(r.estimated_hours for r in curated_resources) or 15
 
                 milestones.append(LearningMilestone(
                     title=m.get("title", ""),
                     description=m.get("description", ""),
                     target_level=target_level,
-                    estimated_hours=m.get("estimated_hours", 0),
-                    resources=resources,
+                    estimated_hours=milestone_hours,
+                    resources=curated_resources, 
                     practice_project=m.get("practice_project", ""),
                 ))
 
-            why_learn = llm_path.get(
-                "why_learn",
-                f"Bridging this gap in {gap.skill_name} is essential for the target role."
-            )
+            why_learn = llm_path.get("why_learn", f"Bridging this gap is essential for {gap.skill_name}.")
             leverage = llm_path.get("leverage_existing", [])
 
+            total_hours = sum(m.estimated_hours for m in milestones) or gap.estimated_hours
+
+            result.append(SkillLearningPath(
+                skill_name=gap.skill_name,
+                current_level=gap.current_level,
+                target_level=gap.required_level,
+                priority=gap.priority,
+                total_estimated_hours=round(total_hours, 1),
+                milestones=milestones,
+                why_learn=why_learn,
+                leverage_existing=leverage,
+            ))
         else:
-            # Fallback: build from curated resources (Saves LLM tokens!)
-            milestones = _create_fallback_milestones(gap, curated)
-            why_learn = f"Bridging this gap in {gap.skill_name} is essential for the target role."
-            leverage = []
-
-        total_hours = sum(m.estimated_hours for m in milestones)
-        if total_hours == 0:
-            total_hours = gap.estimated_hours
-
-        result.append(SkillLearningPath(
-            skill_name=gap.skill_name,
-            current_level=gap.current_level,
-            target_level=gap.required_level,
-            priority=gap.priority,
-            total_estimated_hours=round(total_hours, 1),
-            milestones=milestones,
-            why_learn=why_learn,
-            leverage_existing=leverage,
-        ))
+            print(f"Warning: LLM skipped path for {gap.skill_name}")
 
     return result
-
-
-def _create_fallback_milestones(
-    skill_gap: SkillGap,
-    curated_resources: list[LearningResource],
-) -> list[LearningMilestone]:
-    """Create basic milestones when LLM generation fails or is skipped to save tokens."""
-    level_order = [
-        ProficiencyLevel.NOVICE,
-        ProficiencyLevel.BEGINNER,
-        ProficiencyLevel.INTERMEDIATE,
-        ProficiencyLevel.ADVANCED,
-        ProficiencyLevel.EXPERT,
-    ]
-
-    current_idx = level_order.index(skill_gap.current_level)
-    target_idx = level_order.index(skill_gap.required_level)
-
-    milestones = []
-    resource_idx = 0
-
-    for i in range(current_idx + 1, target_idx + 1):
-        level = level_order[i]
-
-        milestone_resources = []
-        while resource_idx < len(curated_resources) and len(milestone_resources) < 3:
-            milestone_resources.append(curated_resources[resource_idx])
-            resource_idx += 1
-
-        hours = sum(r.estimated_hours for r in milestone_resources) or 15
-
-        milestones.append(LearningMilestone(
-            title=f"Reach {level.value.title()} in {skill_gap.skill_name}",
-            description=f"Build {level.value} proficiency through structured learning and practice.",
-            target_level=level,
-            estimated_hours=hours,
-            resources=milestone_resources,
-            practice_project=f"Build a project that demonstrates {level.value}-level {skill_gap.skill_name} skills.",
-        ))
-
-    return milestones
 
 
 # ──────────────────────────────────────────────
 # Public API
 # ──────────────────────────────────────────────
 
-def generate_learning_plan(
+def generate_paths_batch(
+    gaps_batch: list[SkillGap], 
+    target_role: str
+) -> list[SkillLearningPath]:
+    """
+    Takes a specific slice of gaps (e.g., exactly 3) and generates 
+    their dynamic learning paths via the LLM.
+    """
+    if not gaps_batch:
+        return []
+
+    llm_data = _generate_paths_with_llm(gaps_batch, target_role)
+    learning_paths = _build_paths_from_llm_response(llm_data, gaps_batch)
+    
+    return learning_paths
+
+
+def generate_learning_plan_base(
     parsed_resume: ParsedResume,
     parsed_jd: ParsedJD,
     gap_analysis: GapAnalysisResult,
 ) -> PersonalizedLearningPlan:
     """
-    Generate a complete personalized learning plan.
-    Makes a SINGLE LLM call for all skill gaps.
+    Generates the base structure of the learning plan (metadata, strengths, etc.)
+    without triggering the heavy LLM path generation. Paths are lazy-loaded.
     """
-    if gap_analysis.gaps:
-        # ONE call for all gaps
-        llm_data = _generate_all_paths_with_llm(
-            gap_analysis.gaps,
-            parsed_jd.job_title,
-        )
-        learning_paths = _build_paths_from_llm_response(llm_data, gap_analysis.gaps)
-    else:
-        learning_paths = []
-
-    total_hours = sum(p.total_estimated_hours for p in learning_paths)
+    # Use the hours directly from the gap analysis to give an accurate total immediately
+    total_hours = gap_analysis.total_estimated_hours
     estimated_weeks = total_hours / 10.0 if total_hours > 0 else 0
 
     quick_wins = []
     long_term = []
 
-    for path in learning_paths:
+    for gap in gap_analysis.gaps:
         label = (
-            f"{path.skill_name}: {path.current_level.value.title()} to "
-            f"{path.target_level.value.title()} (~{path.total_estimated_hours:.0f} hours)"
+            f"{gap.skill_name}: {gap.current_level.value.title()} to "
+            f"{gap.required_level.value.title()} (~{gap.estimated_hours:.0f} hours)"
         )
-        if path.total_estimated_hours <= 20:
+        if gap.estimated_hours <= 20:
             quick_wins.append(label)
-        elif path.total_estimated_hours > 60:
+        elif gap.estimated_hours > 60:
             long_term.append(label)
 
     strengths_summary = ""
@@ -387,7 +308,7 @@ def generate_learning_plan(
         overall_match_score=gap_analysis.overall_match_score,
         total_estimated_hours=round(total_hours, 1),
         estimated_weeks=round(estimated_weeks, 1),
-        learning_paths=learning_paths,
+        learning_paths=[], # Left empty to be filled by UI pagination
         strengths_summary=strengths_summary,
         quick_wins=quick_wins,
         long_term_goals=long_term,

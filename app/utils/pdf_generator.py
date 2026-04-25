@@ -170,7 +170,18 @@ def generate_pdf(
                 pdf.set_text_color(80, 80, 80)
                 pdf.multi_cell(0, 5, f"Q [{resp.difficulty.value.title()}]: {resp.question}")
                 pdf.set_font("Helvetica", "", 9)
-                pdf.multi_cell(0, 5, f"A: {resp.candidate_answer[:200]}")
+                
+                # --- NEW FIX: Sanitize the candidate answer for FPDF ---
+                raw_answer = str(resp.candidate_answer[:200])
+                # 1. Remove emojis/complex unicode that Helvetica can't draw
+                safe_answer = raw_answer.encode('latin-1', 'replace').decode('latin-1')
+                # 2. Inject a space into any unbroken string longer than 60 characters so FPDF can wrap it
+                safe_answer = " ".join([w if len(w) < 60 else w[:60] + " " + w[60:] for w in safe_answer.split()])
+                
+                # Output the sanitized answer
+                pdf.multi_cell(0, 5, f"A: {safe_answer}")
+                # -------------------------------------------------------
+                
                 pdf.set_text_color(50, 120, 50)
                 pdf.cell(0, 5, f"Score: {resp.score}/5 -- {resp.reasoning}", new_x="LMARGIN", new_y="NEXT")
                 pdf.set_text_color(60, 60, 60)

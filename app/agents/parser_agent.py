@@ -21,18 +21,24 @@ from app.models.schemas import (
 # Compact System Prompts
 # ──────────────────────────────────────────────
 
-RESUME_PARSER_PROMPT = """You are an expert resume analyzer. Extract structured data from the resume.
+TARGETED_RESUME_PARSER_PROMPT = """You are an expert technical recruiter. 
+Analyze the candidate's resume ONLY for the specific skills requested below.
 
-For each skill found, infer proficiency:
+TARGET SKILLS TO FIND:
+{target_skills}
+
+For each target skill found, infer proficiency:
 - novice: just mentioned/familiar, no real usage
 - beginner: used in 1 small project or academic, <1 year
 - intermediate: used in 2+ projects or professionally, 1-2 years
 - advanced: 3+ years, lead/deep work
 - expert: 5+ years, recognized expertise
 
-Categories: programming_language, framework, database, devops, cloud, ai_ml, soft_skill, tool, methodology, other
-
-Respond with ONLY valid JSON. No markdown. No explanation."""
+Rules:
+1. If a target skill is NOT found on the resume, DO NOT include it in the JSON output.
+2. Ignore any skills on the resume that are not in the target list.
+3. Respond with ONLY valid JSON. No markdown. No explanation.
+"""
 
 
 JD_PARSER_PROMPT = """You are an expert job description analyzer. Extract structured data from the JD.
@@ -223,35 +229,22 @@ def _safe_requirement(value: str) -> SkillRequirementLevel:
 # Public API
 # ──────────────────────────────────────────────
 
-def parse_resume(resume_text: str) -> ParsedResume:
-    """Parse raw resume text into structured ParsedResume. Uses cache if available."""
+def parse_resume_targeted(resume_text: str, target_skills: list[str]) -> ParsedResume:
+    """Parse resume text looking ONLY for specific target skills."""
     from app.utils.cache import get_resume_cache_key, load_from_cache, save_to_cache
-
-    cache_key = get_resume_cache_key(resume_text)
+    
+    # Optional: You might want to include the target_skills in the cache key now
+    cache_key = get_resume_cache_key(resume_text + "".join(target_skills))
     cached = load_from_cache(cache_key)
 
     if cached:
-        print(f"Using cached resume parse: {cache_key}")
-        skills = []
-        for s in cached.get("skills", []):
-            skills.append(ResumeSkill(
-                name=s.get("name", "Unknown"),
-                category=_safe_category(s.get("category", "other")),
-                aliases=s.get("aliases", []),
-                claimed_level=_safe_proficiency(s.get("claimed_level", "intermediate")),
-                years_experience=s.get("years_experience"),
-                context=s.get("context", ""),
-            ))
-        return ParsedResume(
-            candidate_name=cached.get("candidate_name", "Unknown"),
-            total_experience_years=cached.get("total_experience_years"),
-            current_role=cached.get("current_role", ""),
-            skills=skills,
-            education=cached.get("education", []),
-            summary=cached.get("summary", ""),
-        )
+        print(f"Using cached targeted resume parse: {cache_key}")
+        # ... (keep existing cache loading logic) ...
+        return ParsedResume(**cached)
 
-    user_prompt = f"""Extract all information from this resume.
+    skills_str = ", ".join(target_skills)
+    
+    user_prompt = f"""Extract information from this resume for the target skills.
 
 RESUME:
 ---
@@ -259,12 +252,13 @@ RESUME:
 ---
 
 Return JSON matching this schema:
-{RESUME_SCHEMA}
+{RESUME_SCHEMA}"""
 
-Extract EVERY technical skill. Be thorough."""
+    # Format the system prompt with the specific skills
+    system_content = TARGETED_RESUME_PARSER_PROMPT.format(target_skills=skills_str)
 
     messages = [
-        SystemMessage(content=RESUME_PARSER_PROMPT),
+        SystemMessage(content=system_content),
         HumanMessage(content=user_prompt),
     ]
 
@@ -276,7 +270,6 @@ Extract EVERY technical skill. Be thorough."""
     except json.JSONDecodeError as e:
         raise ValueError(f"Failed to parse JSON: {e}\nRaw: {raw_response[:500]}")
 
-    # Save to cache
     save_to_cache(cache_key, data)
 
     skills = []
@@ -374,7 +367,15 @@ Extract EVERY skill requirement. Be thorough."""
 
 
 def parse_both(resume_text: str, jd_text: str) -> tuple[ParsedResume, ParsedJD]:
-    """Parse both resume and JD."""
-    parsed_resume = parse_resume(resume_text)
+    """Parse JD first, then use its skills to do a targeted parse of the resume."""
+    
+    # 1. Parse JD (Extracts all requirements)
     parsed_jd = parse_jd(jd_text)
+    
+    # 2. Extract just the names of the required skills
+    jd_skill_names = [skill.name for skill in parsed_jd.skills]
+    
+    # 3. Parse Resume looking ONLY for the JD skills
+    parsed_resume = parse_resume_targeted(resume_text, target_skills=jd_skill_names)
+    
     return parsed_resume, parsed_jd
