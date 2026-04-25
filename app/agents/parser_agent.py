@@ -224,7 +224,33 @@ def _safe_requirement(value: str) -> SkillRequirementLevel:
 # ──────────────────────────────────────────────
 
 def parse_resume(resume_text: str) -> ParsedResume:
-    """Parse raw resume text into structured ParsedResume."""
+    """Parse raw resume text into structured ParsedResume. Uses cache if available."""
+    from app.utils.cache import get_resume_cache_key, load_from_cache, save_to_cache
+
+    cache_key = get_resume_cache_key(resume_text)
+    cached = load_from_cache(cache_key)
+
+    if cached:
+        print(f"Using cached resume parse: {cache_key}")
+        skills = []
+        for s in cached.get("skills", []):
+            skills.append(ResumeSkill(
+                name=s.get("name", "Unknown"),
+                category=_safe_category(s.get("category", "other")),
+                aliases=s.get("aliases", []),
+                claimed_level=_safe_proficiency(s.get("claimed_level", "intermediate")),
+                years_experience=s.get("years_experience"),
+                context=s.get("context", ""),
+            ))
+        return ParsedResume(
+            candidate_name=cached.get("candidate_name", "Unknown"),
+            total_experience_years=cached.get("total_experience_years"),
+            current_role=cached.get("current_role", ""),
+            skills=skills,
+            education=cached.get("education", []),
+            summary=cached.get("summary", ""),
+        )
+
     user_prompt = f"""Extract all information from this resume.
 
 RESUME:
@@ -250,6 +276,9 @@ Extract EVERY technical skill. Be thorough."""
     except json.JSONDecodeError as e:
         raise ValueError(f"Failed to parse JSON: {e}\nRaw: {raw_response[:500]}")
 
+    # Save to cache
+    save_to_cache(cache_key, data)
+
     skills = []
     for s in data.get("skills", []):
         skills.append(ResumeSkill(
@@ -272,7 +301,31 @@ Extract EVERY technical skill. Be thorough."""
 
 
 def parse_jd(jd_text: str) -> ParsedJD:
-    """Parse raw JD text into structured ParsedJD."""
+    """Parse raw JD text into structured ParsedJD. Uses cache if available."""
+    from app.utils.cache import get_jd_cache_key, load_from_cache, save_to_cache
+
+    cache_key = get_jd_cache_key(jd_text)
+    cached = load_from_cache(cache_key)
+
+    if cached:
+        print(f"Using cached JD parse: {cache_key}")
+        skills = []
+        for s in cached.get("skills", []):
+            skills.append(JDSkill(
+                name=s.get("name", "Unknown"),
+                category=_safe_category(s.get("category", "other")),
+                aliases=s.get("aliases", []),
+                required_level=_safe_proficiency(s.get("required_level", "intermediate")),
+                requirement_type=_safe_requirement(s.get("requirement_type", "required")),
+            ))
+        return ParsedJD(
+            job_title=cached.get("job_title", ""),
+            company=cached.get("company", ""),
+            seniority_level=cached.get("seniority_level", ""),
+            skills=skills,
+            summary=cached.get("summary", ""),
+        )
+
     user_prompt = f"""Extract all information from this job description.
 
 JOB DESCRIPTION:
@@ -297,6 +350,9 @@ Extract EVERY skill requirement. Be thorough."""
         data = json.loads(cleaned)
     except json.JSONDecodeError as e:
         raise ValueError(f"Failed to parse JSON: {e}\nRaw: {raw_response[:500]}")
+
+    # Save to cache
+    save_to_cache(cache_key, data)
 
     skills = []
     for s in data.get("skills", []):

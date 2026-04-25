@@ -98,7 +98,13 @@ The candidate has the following skill gaps to address for the role of {target_ro
 
 {gaps_description}
 
-For EACH skill gap, generate a learning path. Respond with ONLY valid JSON matching this schema:
+CRITICAL OUTPUT CONSTRAINTS (TO PREVENT TOKEN LIMITS):
+1. MAX PATHS: Only generate detailed learning paths for the TOP 3 highest-priority skill gaps. Ignore the rest.
+2. MAX MILESTONES: Limit each learning path to exactly 2 milestones.
+3. MAX RESOURCES: Limit each milestone to exactly 2 highly relevant resources.
+4. CONCISENESS: Keep all descriptions, "why learn this", and summaries under 2 sentences. Be incredibly concise.
+
+For those top 3 skill gaps, generate a learning path. Respond with ONLY valid JSON matching this schema:
 {{
   "paths": [
     {{
@@ -129,8 +135,8 @@ For EACH skill gap, generate a learning path. Respond with ONLY valid JSON match
 }}
 
 Rules:
-- 2-3 milestones per skill
-- 2-3 resources per milestone
+- 1-2 milestones per skill MAXIMUM
+- 1-2 resources per milestone MAXIMUM
 - Prefer free resources (official docs, YouTube, GitHub repos, free courses)
 - Include practical projects at each milestone
 - Time estimates should be realistic
@@ -147,11 +153,17 @@ def _generate_all_paths_with_llm(
     This is the key optimization -- 1 API call instead of N.
     """
     gaps_description = ""
-    for i, gap in enumerate(gaps, 1):
+    
+    # Sort gaps by priority (assuming Priority Enum: CRITICAL is highest)
+    # We pass all of them so the LLM has context, but it will only process the top 3
+    sorted_gaps = sorted(gaps, key=lambda g: g.priority.value if hasattr(g.priority, 'value') else 0)
+    
+    for i, gap in enumerate(sorted_gaps, 1):
         adjacent_str = ", ".join(gap.adjacent_skills) if gap.adjacent_skills else "none identified"
         gaps_description += (
             f"{i}. {gap.skill_name}: "
             f"Current={gap.current_level.value}, Target={gap.required_level.value}, "
+            f"Priority={gap.priority}, "
             f"Related skills candidate has: {adjacent_str}, "
             f"Estimated hours: {gap.estimated_hours}\n"
         )
@@ -163,7 +175,7 @@ def _generate_all_paths_with_llm(
 
     messages = [
         SystemMessage(content=prompt),
-        HumanMessage(content=f"Generate learning paths for all {len(gaps)} skill gaps."),
+        HumanMessage(content=f"Generate concise learning paths for the top 3 most critical skill gaps out of the {len(gaps)} provided."),
     ]
 
     try:
@@ -259,7 +271,7 @@ def _build_paths_from_llm_response(
             leverage = llm_path.get("leverage_existing", [])
 
         else:
-            # Fallback: build from curated resources
+            # Fallback: build from curated resources (Saves LLM tokens!)
             milestones = _create_fallback_milestones(gap, curated)
             why_learn = f"Bridging this gap in {gap.skill_name} is essential for the target role."
             leverage = []
@@ -286,7 +298,7 @@ def _create_fallback_milestones(
     skill_gap: SkillGap,
     curated_resources: list[LearningResource],
 ) -> list[LearningMilestone]:
-    """Create basic milestones when LLM generation fails."""
+    """Create basic milestones when LLM generation fails or is skipped to save tokens."""
     level_order = [
         ProficiencyLevel.NOVICE,
         ProficiencyLevel.BEGINNER,

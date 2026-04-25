@@ -1,63 +1,61 @@
 """
 LLM client configuration.
-Smart routing with rate limit awareness and retry logic.
 
 Strategy:
-- Groq GPT-OSS 120B: conversational assessment (short prompts, fast)
-- Gemini 2.5 Flash: parsing (large input, structured output)
-- Gemini 2.5 Flash-Lite: learning plan generation (high RPD quota)
-- Gemini 2.5 Pro: fallback for complex reasoning
+- OpenRouter Nemotron 3 Super (free): parsing + analysis (20 RPM, 200 RPD)
+- Groq GPT-OSS 120B: assessment chat (short prompts, fast responses)
+- Fallback chain between both providers
 
-Key insight: Groq cached tokens don't count toward rate limits,
-so we benefit from consistent system prompts.
+Rate limit enforcement built in.
 """
 
 import os
 import time
+import threading
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 
 load_dotenv()
 
-# ──────────────────────────────────────────────
-# Rate limit tracking
-# ──────────────────────────────────────────────
-
-_last_groq_call = 0.0
-_last_gemini_call = 0.0
-GROQ_MIN_DELAY = 3.0       # seconds between Groq calls (stay under 30 RPM)
-GEMINI_MIN_DELAY = 7.0     # seconds between Gemini calls (stay under 10 RPM)
-
-
-def _wait_for_groq():
-    """Enforce minimum delay between Groq API calls."""
-    global _last_groq_call
-    now = time.time()
-    elapsed = now - _last_groq_call
-    if elapsed < GROQ_MIN_DELAY:
-        time.sleep(GROQ_MIN_DELAY - elapsed)
-    _last_groq_call = time.time()
-
-
-def _wait_for_gemini():
-    """Enforce minimum delay between Gemini API calls."""
-    global _last_gemini_call
-    now = time.time()
-    elapsed = now - _last_gemini_call
-    if elapsed < GEMINI_MIN_DELAY:
-        time.sleep(GEMINI_MIN_DELAY - elapsed)
-    _last_gemini_call = time.time()
-
 
 # ──────────────────────────────────────────────
-# Base constructors
+# Rate Limiter
+# ──────────────────────────────────────────────
+
+class RateLimiter:
+    """Thread-safe rate limiter that enforces minimum delay between calls."""
+
+    def __init__(self, min_delay_seconds: float):
+        self.min_delay = min_delay_seconds
+        self.last_call = 0.0
+        self.lock = threading.Lock()
+
+    def wait(self):
+        with self.lock:
+            now = time.time()
+            elapsed = now - self.last_call
+            if elapsed < self.min_delay:
+                sleep_time = self.min_delay - elapsed
+                time.sleep(sleep_time)
+            self.last_call = time.time()
+
+
+# Groq: 30 RPM free tier -> 1 call per 2 seconds to be safe
+_groq_limiter = RateLimiter(min_delay_seconds=3.0)
+
+# OpenRouter: 20 RPM free tier -> 1 call per 4 seconds to be safe
+_openrouter_limiter = RateLimiter(min_delay_seconds=4.0)
+
+
+# ──────────────────────────────────────────────
+# Base Constructors
 # ──────────────────────────────────────────────
 
 def get_groq_llm(
     model: str = "openai/gpt-oss-120b",
     temperature: float = 0.3,
-    max_tokens: int = 2048,
+    max_tokens: int = 1024,
 ) -> ChatGroq:
     """Get a Groq LLM instance."""
     api_key = os.getenv("GROQ_API_KEY")
@@ -71,20 +69,28 @@ def get_groq_llm(
     )
 
 
-def get_gemini_llm(
-    model: str = "gemini-2.5-flash",
+def get_openrouter_llm(
+    model: str = "google/gemma-4-31b-it:free",
     temperature: float = 0.3,
-    max_tokens: int = 8192,
-) -> ChatGoogleGenerativeAI:
-    """Get a Google Gemini LLM instance."""
-    api_key = os.getenv("GOOGLE_API_KEY")
+    max_tokens: int = 9000,
+) -> ChatOpenAI:
+    """
+    Get an OpenRouter LLM instance.
+    OpenRouter uses OpenAI-compatible API with a different base URL.
+    """
+    api_key = os.getenv("OPENROUTER_API_KEY")
     if not api_key:
-        raise ValueError("GOOGLE_API_KEY not found in environment variables!")
-    return ChatGoogleGenerativeAI(
+        raise ValueError("OPENROUTER_API_KEY not found in environment variables!")
+    return ChatOpenAI(
         model=model,
-        google_api_key=api_key,
+        api_key=api_key,
+        base_url="https://openrouter.ai/api/v1",
         temperature=temperature,
-        max_output_tokens=max_tokens,
+        max_tokens=max_tokens,
+        default_headers={
+            "HTTP-Referer": "http://localhost:8501",
+            "X-Title": "Skill Assessment Agent",
+        },
     )
 
 
@@ -92,52 +98,36 @@ def get_gemini_llm(
 # Role-based LLM selection
 # ──────────────────────────────────────────────
 
-def get_parsing_llm() -> ChatGoogleGenerativeAI:
-    """
-    LLM for parsing tasks (resume + JD extraction).
-    Uses Gemini 2.5 Flash -- good balance of quality and RPD.
-    """
-    return get_gemini_llm(
-        model="gemini-2.5-flash",
+def get_parsing_llm() -> ChatOpenAI:
+    """LLM for parsing tasks. Uses OpenRouter Nemotron."""
+    return get_openrouter_llm(
         temperature=0.1,
-        max_tokens=8192,
+        max_tokens=4096,
     )
 
 
 def get_assessment_llm() -> ChatGroq:
-    """
-    LLM for conversational assessment.
-    Uses Groq GPT-OSS 120B -- fast responses for chat.
-    Short prompts keep within 6K TPM limit.
-    """
+    """LLM for conversational assessment. Uses Groq for speed."""
     return get_groq_llm(
         model="openai/gpt-oss-120b",
         temperature=0.3,
-        max_tokens=1024,  # keep output short to save TPM
+        max_tokens=1024,
     )
 
 
-def get_analysis_llm() -> ChatGoogleGenerativeAI:
-    """
-    LLM for learning plan generation.
-    Uses Gemini 2.5 Flash-Lite -- highest RPD (1000/day) on free tier.
-    """
-    return get_gemini_llm(
-        model="gemini-2.5-flash-lite",
+def get_analysis_llm() -> ChatOpenAI:
+    """LLM for gap analysis and learning plan. Uses OpenRouter Nemotron."""
+    return get_openrouter_llm(
         temperature=0.3,
         max_tokens=8192,
     )
 
-
-def get_fallback_llm() -> ChatGoogleGenerativeAI:
-    """
-    Fallback LLM for when other models fail.
-    Uses Gemini 2.5 Pro -- 100 RPD but strongest reasoning.
-    """
-    return get_gemini_llm(
-        model="gemini-2.5-pro",
+def get_groq_analysis_llm() -> ChatGroq:
+    """High-token fallback for analysis tasks. Prevents the 'Unterminated string' error."""
+    return get_groq_llm(
+        model="llama-3.3-70b-versatile",
         temperature=0.3,
-        max_tokens=8192,
+        max_tokens=8000, # CRITICAL: Huge output limit for JSON
     )
 
 
@@ -151,41 +141,34 @@ def call_with_retry(messages, llm_type: str = "assessment", max_retries: int = 3
 
     llm_type: "assessment" | "parsing" | "analysis"
 
-    Fallback chain:
-    - assessment: Groq -> Gemini Flash -> Gemini Pro
-    - parsing: Gemini Flash -> Gemini Flash-Lite -> Gemini Pro
-    - analysis: Gemini Flash-Lite -> Gemini Flash -> Gemini Pro
+    Fallback chains:
+    - assessment: Groq -> OpenRouter
+    - parsing: OpenRouter -> Groq
+    - analysis: OpenRouter -> Groq
     """
     fallback_chains = {
         "assessment": [
-            ("groq", get_assessment_llm),
-            ("gemini", get_parsing_llm),
-            ("gemini", get_fallback_llm),
+            ("groq", get_assessment_llm, _groq_limiter),
+            ("openrouter", get_parsing_llm, _openrouter_limiter),
         ],
         "parsing": [
-            ("gemini", get_parsing_llm),
-            ("gemini", get_analysis_llm),
-            ("gemini", get_fallback_llm),
+            ("openrouter", get_parsing_llm, _openrouter_limiter),
+            ("groq", get_assessment_llm, _groq_limiter),
         ],
         "analysis": [
-            ("gemini", get_analysis_llm),
-            ("gemini", get_parsing_llm),
-            ("gemini", get_fallback_llm),
+            ("openrouter", get_analysis_llm, _openrouter_limiter),
+            ("groq", get_groq_analysis_llm, _groq_limiter), # <-- FIXED: Uses the 8000-token Groq fallback
         ],
     }
 
     chain = fallback_chains.get(llm_type, fallback_chains["assessment"])
-
     last_error = None
 
-    for provider, llm_factory in chain:
+    for provider, llm_factory, limiter in chain:
         for attempt in range(max_retries):
             try:
-                # Enforce rate limits
-                if provider == "groq":
-                    _wait_for_groq()
-                else:
-                    _wait_for_gemini()
+                # Enforce rate limit
+                limiter.wait()
 
                 llm = llm_factory()
                 response = llm.invoke(messages)
@@ -195,25 +178,25 @@ def call_with_retry(messages, llm_type: str = "assessment", max_retries: int = 3
                 last_error = e
                 error_str = str(e).lower()
 
-                # If rate limited, wait and retry
-                if "rate_limit" in error_str or "429" in error_str or "resource_exhausted" in error_str:
-                    wait_time = (attempt + 1) * 10  # 10s, 20s, 30s
+                # Rate limited -- wait and retry
+                if any(x in error_str for x in ["rate_limit", "429", "resource_exhausted", "too many"]):
+                    wait_time = (attempt + 1) * 15
                     print(
                         f"Rate limited on {provider}. "
-                        f"Waiting {wait_time}s before retry {attempt + 1}/{max_retries}..."
+                        f"Waiting {wait_time}s (attempt {attempt + 1}/{max_retries})..."
                     )
                     time.sleep(wait_time)
                     continue
 
-                # If token limit exceeded, try next model in chain
-                if "too large" in error_str or "token" in error_str:
-                    print(f"Token limit on {provider}. Trying next model...")
+                # Token limit -- skip to next provider
+                if any(x in error_str for x in ["too large", "token", "context_length"]):
+                    print(f"Token limit on {provider}. Trying next provider...")
                     break
 
-                # Other errors -- retry once then move to next
-                if attempt == 0:
-                    print(f"Error on {provider}: {e}. Retrying...")
-                    time.sleep(2)
+                # Other error -- retry once then next provider
+                if attempt < max_retries - 1:
+                    print(f"Error on {provider}: {e}. Retrying in 5s...")
+                    time.sleep(5)
                     continue
                 else:
                     break
@@ -225,11 +208,14 @@ def call_with_retry(messages, llm_type: str = "assessment", max_retries: int = 3
 # Backward compatibility
 # ──────────────────────────────────────────────
 
-def get_primary_llm() -> ChatGroq:
+def get_primary_llm():
     return get_assessment_llm()
 
-def get_backup_llm() -> ChatGoogleGenerativeAI:
+def get_backup_llm():
     return get_parsing_llm()
 
-def get_fast_llm() -> ChatGroq:
+def get_fast_llm():
     return get_assessment_llm()
+
+def get_fallback_llm():
+    return get_parsing_llm()
