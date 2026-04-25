@@ -1,0 +1,27 @@
+# Core
+langgraph
+langchain
+langchain-core
+langchain-groq
+langchain-google-genai
+
+# Frontend
+streamlit==1.45.1
+
+# PDF parsing
+PyPDF2==3.0.1
+python-docx==1.1.2
+
+# Data & Visualization
+plotly==6.1.2
+pandas==2.2.3
+
+# PDF generation
+fpdf2==2.8.3
+
+# Utilities
+python-dotenv==1.1.0
+pydantic==2.11.2
+
+# Testing
+pytest==8.3.5

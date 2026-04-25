@@ -1,0 +1,224 @@
+{
+  "categories": {
+    "programming_language": {
+      "python": {
+        "aliases": ["python3", "py"],
+        "adjacent": [
+          "pandas",
+          "numpy",
+          "fastapi",
+          "django",
+          "flask",
+          "pytorch",
+          "tensorflow"
+        ],
+        "parent": null
+      },
+      "javascript": {
+        "aliases": ["js", "es6", "ecmascript"],
+        "adjacent": [
+          "typescript",
+          "react",
+          "nodejs",
+          "vue",
+          "angular",
+          "nextjs"
+        ],
+        "parent": null
+      },
+      "typescript": {
+        "aliases": ["ts"],
+        "adjacent": ["javascript", "react", "angular", "nextjs", "nodejs"],
+        "parent": "javascript"
+      },
+      "java": {
+        "aliases": [],
+        "adjacent": ["spring", "spring_boot", "kotlin", "maven", "gradle"],
+        "parent": null
+      },
+      "cpp": {
+        "aliases": ["c++", "cplusplus"],
+        "adjacent": ["c", "rust", "systems_programming"],
+        "parent": null
+      },
+      "go": {
+        "aliases": ["golang"],
+        "adjacent": ["docker", "kubernetes", "microservices"],
+        "parent": null
+      },
+      "rust": {
+        "aliases": [],
+        "adjacent": ["cpp", "systems_programming", "webassembly"],
+        "parent": null
+      },
+      "sql": {
+        "aliases": ["structured_query_language"],
+        "adjacent": ["postgresql", "mysql", "data_modeling", "database_design"],
+        "parent": null
+      }
+    },
+    "framework": {
+      "react": {
+        "aliases": ["reactjs", "react.js"],
+        "adjacent": [
+          "nextjs",
+          "redux",
+          "javascript",
+          "typescript",
+          "tailwindcss"
+        ],
+        "parent": "javascript"
+      },
+      "nextjs": {
+        "aliases": ["next.js", "next"],
+        "adjacent": ["react", "vercel", "typescript"],
+        "parent": "react"
+      },
+      "django": {
+        "aliases": [],
+        "adjacent": ["python", "django_rest_framework", "celery", "postgresql"],
+        "parent": "python"
+      },
+      "fastapi": {
+        "aliases": ["fast_api"],
+        "adjacent": ["python", "pydantic", "uvicorn", "sqlalchemy"],
+        "parent": "python"
+      },
+      "flask": {
+        "aliases": [],
+        "adjacent": ["python", "jinja2", "sqlalchemy"],
+        "parent": "python"
+      },
+      "spring_boot": {
+        "aliases": ["spring", "springboot"],
+        "adjacent": ["java", "maven", "gradle", "microservices"],
+        "parent": "java"
+      },
+      "langchain": {
+        "aliases": [],
+        "adjacent": ["python", "langgraph", "llm", "rag", "vector_databases"],
+        "parent": "python"
+      }
+    },
+    "ai_ml": {
+      "machine_learning": {
+        "aliases": ["ml"],
+        "adjacent": [
+          "deep_learning",
+          "scikit_learn",
+          "python",
+          "statistics",
+          "data_science"
+        ],
+        "parent": null
+      },
+      "deep_learning": {
+        "aliases": ["dl"],
+        "adjacent": [
+          "pytorch",
+          "tensorflow",
+          "neural_networks",
+          "machine_learning"
+        ],
+        "parent": "machine_learning"
+      },
+      "pytorch": {
+        "aliases": [],
+        "adjacent": ["deep_learning", "python", "cuda", "transformers"],
+        "parent": "deep_learning"
+      },
+      "tensorflow": {
+        "aliases": ["tf"],
+        "adjacent": ["deep_learning", "python", "keras"],
+        "parent": "deep_learning"
+      },
+      "nlp": {
+        "aliases": ["natural_language_processing"],
+        "adjacent": ["transformers", "huggingface", "spacy", "llm"],
+        "parent": "machine_learning"
+      },
+      "llm": {
+        "aliases": ["large_language_models"],
+        "adjacent": [
+          "nlp",
+          "transformers",
+          "langchain",
+          "rag",
+          "prompt_engineering"
+        ],
+        "parent": "nlp"
+      },
+      "rag": {
+        "aliases": ["retrieval_augmented_generation"],
+        "adjacent": ["llm", "vector_databases", "langchain", "embeddings"],
+        "parent": "llm"
+      },
+      "computer_vision": {
+        "aliases": ["cv"],
+        "adjacent": ["deep_learning", "opencv", "pytorch", "image_processing"],
+        "parent": "machine_learning"
+      }
+    },
+    "devops": {
+      "docker": {
+        "aliases": ["containerization"],
+        "adjacent": ["kubernetes", "docker_compose", "ci_cd"],
+        "parent": null
+      },
+      "kubernetes": {
+        "aliases": ["k8s"],
+        "adjacent": ["docker", "helm", "cloud", "microservices"],
+        "parent": "docker"
+      },
+      "ci_cd": {
+        "aliases": ["cicd", "continuous_integration", "continuous_deployment"],
+        "adjacent": ["github_actions", "jenkins", "docker", "testing"],
+        "parent": null
+      },
+      "terraform": {
+        "aliases": ["iac", "infrastructure_as_code"],
+        "adjacent": ["cloud", "aws", "azure", "gcp"],
+        "parent": null
+      }
+    },
+    "cloud": {
+      "aws": {
+        "aliases": ["amazon_web_services"],
+        "adjacent": ["ec2", "s3", "lambda", "cloud_architecture"],
+        "parent": null
+      },
+      "gcp": {
+        "aliases": ["google_cloud", "google_cloud_platform"],
+        "adjacent": ["bigquery", "cloud_functions", "cloud_architecture"],
+        "parent": null
+      },
+      "azure": {
+        "aliases": ["microsoft_azure"],
+        "adjacent": ["azure_devops", "cloud_architecture"],
+        "parent": null
+      }
+    },
+    "database": {
+      "postgresql": {
+        "aliases": ["postgres", "psql"],
+        "adjacent": ["sql", "data_modeling", "database_design"],
+        "parent": "sql"
+      },
+      "mongodb": {
+        "aliases": ["mongo"],
+        "adjacent": ["nosql", "database_design", "mongoose"],
+        "parent": null
+      },
+      "redis": {
+        "aliases": [],
+        "adjacent": ["caching", "message_queue", "database_design"],
+        "parent": null
+      },
+      "vector_databases": {
+        "aliases": ["pinecone", "weaviate", "chromadb", "milvus", "qdrant"],
+        "adjacent": ["embeddings", "rag", "llm"],
+        "parent": null
+      }
+    }
+  }
+}

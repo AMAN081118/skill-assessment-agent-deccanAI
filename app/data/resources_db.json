@@ -1,0 +1,333 @@
+{
+  "python": {
+    "beginner": [
+      {
+        "title": "Python Official Tutorial",
+        "url": "https://docs.python.org/3/tutorial/",
+        "type": "documentation",
+        "hours": 15,
+        "free": true
+      },
+      {
+        "title": "Automate the Boring Stuff with Python",
+        "url": "https://automatetheboringstuff.com/",
+        "type": "book",
+        "hours": 20,
+        "free": true
+      }
+    ],
+    "intermediate": [
+      {
+        "title": "Python Design Patterns",
+        "url": "https://refactoring.guru/design-patterns/python",
+        "type": "article",
+        "hours": 10,
+        "free": true
+      },
+      {
+        "title": "Build a REST API with FastAPI — Project",
+        "url": "",
+        "type": "project",
+        "hours": 15,
+        "free": true
+      }
+    ],
+    "advanced": [
+      {
+        "title": "CPython Internals Book",
+        "url": "https://realpython.com/cpython-source-code-guide/",
+        "type": "article",
+        "hours": 20,
+        "free": true
+      },
+      {
+        "title": "Contribute to an open source Python project",
+        "url": "",
+        "type": "project",
+        "hours": 30,
+        "free": true
+      }
+    ]
+  },
+  "docker": {
+    "beginner": [
+      {
+        "title": "Docker Official Getting Started",
+        "url": "https://docs.docker.com/get-started/",
+        "type": "documentation",
+        "hours": 5,
+        "free": true
+      },
+      {
+        "title": "Dockerize your existing project",
+        "url": "",
+        "type": "project",
+        "hours": 5,
+        "free": true
+      }
+    ],
+    "intermediate": [
+      {
+        "title": "Docker Compose multi-service setup",
+        "url": "",
+        "type": "project",
+        "hours": 10,
+        "free": true
+      },
+      {
+        "title": "Docker Best Practices Guide",
+        "url": "https://docs.docker.com/build/building/best-practices/",
+        "type": "documentation",
+        "hours": 5,
+        "free": true
+      }
+    ],
+    "advanced": [
+      {
+        "title": "Multi-stage builds & optimization",
+        "url": "",
+        "type": "project",
+        "hours": 15,
+        "free": true
+      }
+    ]
+  },
+  "kubernetes": {
+    "beginner": [
+      {
+        "title": "Kubernetes Official Tutorials",
+        "url": "https://kubernetes.io/docs/tutorials/",
+        "type": "documentation",
+        "hours": 10,
+        "free": true
+      },
+      {
+        "title": "Deploy an app to Minikube — Project",
+        "url": "",
+        "type": "project",
+        "hours": 8,
+        "free": true
+      }
+    ],
+    "intermediate": [
+      {
+        "title": "Kubernetes the Hard Way",
+        "url": "https://github.com/kelseyhightower/kubernetes-the-hard-way",
+        "type": "tutorial",
+        "hours": 20,
+        "free": true
+      }
+    ],
+    "advanced": [
+      {
+        "title": "Design a multi-cluster deployment strategy",
+        "url": "",
+        "type": "project",
+        "hours": 30,
+        "free": true
+      }
+    ]
+  },
+  "react": {
+    "beginner": [
+      {
+        "title": "React Official Tutorial",
+        "url": "https://react.dev/learn",
+        "type": "documentation",
+        "hours": 10,
+        "free": true
+      }
+    ],
+    "intermediate": [
+      {
+        "title": "Build a full-stack app with React + API",
+        "url": "",
+        "type": "project",
+        "hours": 20,
+        "free": true
+      }
+    ],
+    "advanced": [
+      {
+        "title": "React Performance Optimization",
+        "url": "https://react.dev/reference/react",
+        "type": "documentation",
+        "hours": 15,
+        "free": true
+      }
+    ]
+  },
+  "machine_learning": {
+    "beginner": [
+      {
+        "title": "Andrew Ng's ML Course (Coursera)",
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "type": "course",
+        "hours": 40,
+        "free": true
+      },
+      {
+        "title": "Scikit-learn Tutorials",
+        "url": "https://scikit-learn.org/stable/tutorial/",
+        "type": "documentation",
+        "hours": 10,
+        "free": true
+      }
+    ],
+    "intermediate": [
+      {
+        "title": "Kaggle Competitions — Participate in 3",
+        "url": "https://www.kaggle.com/competitions",
+        "type": "project",
+        "hours": 30,
+        "free": true
+      }
+    ],
+    "advanced": [
+      {
+        "title": "Implement ML algorithms from scratch",
+        "url": "",
+        "type": "project",
+        "hours": 40,
+        "free": true
+      },
+      {
+        "title": "Stanford CS229 Lecture Notes",
+        "url": "https://cs229.stanford.edu/",
+        "type": "course",
+        "hours": 30,
+        "free": true
+      }
+    ]
+  },
+  "deep_learning": {
+    "beginner": [
+      {
+        "title": "Fast.ai Practical Deep Learning",
+        "url": "https://course.fast.ai/",
+        "type": "course",
+        "hours": 30,
+        "free": true
+      }
+    ],
+    "intermediate": [
+      {
+        "title": "Build and train a CNN from scratch",
+        "url": "",
+        "type": "project",
+        "hours": 20,
+        "free": true
+      }
+    ],
+    "advanced": [
+      {
+        "title": "Implement a Transformer from scratch",
+        "url": "",
+        "type": "project",
+        "hours": 25,
+        "free": true
+      },
+      {
+        "title": "Read and implement 3 recent papers",
+        "url": "https://arxiv.org/",
+        "type": "project",
+        "hours": 40,
+        "free": true
+      }
+    ]
+  },
+  "sql": {
+    "beginner": [
+      {
+        "title": "SQLBolt Interactive Tutorial",
+        "url": "https://sqlbolt.com/",
+        "type": "tutorial",
+        "hours": 5,
+        "free": true
+      }
+    ],
+    "intermediate": [
+      {
+        "title": "LeetCode SQL Problems (Medium)",
+        "url": "https://leetcode.com/problemset/database/",
+        "type": "practice",
+        "hours": 15,
+        "free": true
+      }
+    ],
+    "advanced": [
+      {
+        "title": "Design a database schema for a real application",
+        "url": "",
+        "type": "project",
+        "hours": 15,
+        "free": true
+      }
+    ]
+  },
+  "system_design": {
+    "beginner": [
+      {
+        "title": "System Design Primer (GitHub)",
+        "url": "https://github.com/donnemartin/system-design-primer",
+        "type": "article",
+        "hours": 15,
+        "free": true
+      }
+    ],
+    "intermediate": [
+      {
+        "title": "Design a URL Shortener",
+        "url": "",
+        "type": "project",
+        "hours": 10,
+        "free": true
+      }
+    ],
+    "advanced": [
+      {
+        "title": "Design a distributed message queue",
+        "url": "",
+        "type": "project",
+        "hours": 20,
+        "free": true
+      }
+    ]
+  },
+  "_default": {
+    "beginner": [
+      {
+        "title": "Official Documentation",
+        "url": "",
+        "type": "documentation",
+        "hours": 10,
+        "free": true
+      },
+      {
+        "title": "Beginner Tutorial / Getting Started Guide",
+        "url": "",
+        "type": "tutorial",
+        "hours": 8,
+        "free": true
+      }
+    ],
+    "intermediate": [
+      {
+        "title": "Build a hands-on project",
+        "url": "",
+        "type": "project",
+        "hours": 15,
+        "free": true
+      }
+    ],
+    "advanced": [
+      {
+        "title": "Contribute to open source or build advanced project",
+        "url": "",
+        "type": "project",
+        "hours": 25,
+        "free": true
+      }
+    ]
+  }
+}
