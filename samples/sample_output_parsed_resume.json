@@ -1,0 +1,130 @@
+{
+  "candidate_name": "Aman Kumar",
+  "total_experience_years": 0.33,
+  "current_role": "Software Development Intern",
+  "education": [
+    "B.Tech in Smart Manufacturing, Indian Institute of Information Technology, Jabalpur (2023 - Present)"
+  ],
+  "summary": "Pre-final year engineering student focused on scalable backend architecture and AI-integrated software, with experience designing modular multi-agent systems, optimizing PostgreSQL databases, and building full-stack applications.",
+  "skills": [
+    {
+      "name": "Python",
+      "category": "programming_language",
+      "claimed_level": "intermediate",
+      "years_experience": null,
+      "context": "Used in Agentic AI Platform with LangGraph, FastAPI, RAG"
+    },
+    {
+      "name": "C++",
+      "category": "programming_language",
+      "claimed_level": "intermediate",
+      "years_experience": null,
+      "context": "Used for native verification engine with Node-API integration"
+    },
+    {
+      "name": "JavaScript",
+      "category": "programming_language",
+      "claimed_level": "intermediate",
+      "years_experience": null,
+      "context": "Full-stack development with React and Node.js"
+    },
+    {
+      "name": "TypeScript",
+      "category": "programming_language",
+      "claimed_level": "intermediate",
+      "years_experience": null,
+      "context": "Used with Next.js admin dashboard"
+    },
+    {
+      "name": "SQL",
+      "category": "programming_language",
+      "claimed_level": "intermediate",
+      "years_experience": null,
+      "context": "PostgreSQL RPCs, query optimization, database coursework"
+    },
+    {
+      "name": "Golang",
+      "category": "programming_language",
+      "claimed_level": "beginner",
+      "years_experience": null,
+      "context": "Listed in technical skills, no project context"
+    },
+    {
+      "name": "React",
+      "category": "framework",
+      "claimed_level": "intermediate",
+      "years_experience": null,
+      "context": "Custom graphical editor, Agentic AI Platform frontend"
+    },
+    {
+      "name": "Next.js",
+      "category": "framework",
+      "claimed_level": "intermediate",
+      "years_experience": null,
+      "context": "Full-stack admin dashboard at Rakumura IT Solutions"
+    },
+    {
+      "name": "FastAPI",
+      "category": "framework",
+      "claimed_level": "intermediate",
+      "years_experience": null,
+      "context": "Backend for Agentic AI Platform"
+    },
+    {
+      "name": "Node.js",
+      "category": "framework",
+      "claimed_level": "intermediate",
+      "years_experience": null,
+      "context": "Express backend for Reactive System Modeler"
+    },
+    {
+      "name": "PostgreSQL",
+      "category": "database",
+      "claimed_level": "advanced",
+      "years_experience": null,
+      "context": "Optimized RPCs, pgvector similarity search, production usage at internship"
+    },
+    {
+      "name": "MongoDB",
+      "category": "database",
+      "claimed_level": "beginner",
+      "years_experience": null,
+      "context": "Listed in technical skills"
+    },
+    {
+      "name": "Redis",
+      "category": "database",
+      "claimed_level": "beginner",
+      "years_experience": null,
+      "context": "Listed in technical skills"
+    },
+    {
+      "name": "Docker",
+      "category": "devops",
+      "claimed_level": "beginner",
+      "years_experience": null,
+      "context": "Listed in tools section"
+    },
+    {
+      "name": "Git",
+      "category": "tool",
+      "claimed_level": "intermediate",
+      "years_experience": null,
+      "context": "Listed in tools, used across all projects"
+    },
+    {
+      "name": "LangGraph",
+      "category": "framework",
+      "claimed_level": "intermediate",
+      "years_experience": null,
+      "context": "Multi-agent orchestration in Agentic AI Platform"
+    },
+    {
+      "name": "RAG",
+      "category": "ai_ml",
+      "claimed_level": "intermediate",
+      "years_experience": null,
+      "context": "Implemented RAG memory system with sentence-transformers and pgvector"
+    }
+  ]
+}

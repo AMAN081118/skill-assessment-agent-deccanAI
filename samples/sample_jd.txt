@@ -1,0 +1,33 @@
+SOFTWARE DEVELOPMENT ENGINEER INTERN
+
+Company: TechCorp Solutions
+Location: Bangalore, India (Hybrid)
+Duration: 6 months
+
+About the Role:
+We are looking for a motivated Software Development Engineer Intern to join our
+backend platform team. You will work on building scalable microservices, optimizing
+database queries, and contributing to our CI/CD pipeline. This is an excellent
+opportunity for pre-final or final year students passionate about backend engineering.
+
+Requirements:
+- Strong proficiency in Python or Golang
+- Experience with at least one web framework (FastAPI, Django, or Flask)
+- Solid understanding of SQL and relational databases (PostgreSQL preferred)
+- Familiarity with RESTful API design and implementation
+- Knowledge of Data Structures and Algorithms
+- Understanding of version control using Git
+- Good problem-solving skills and attention to detail
+
+Preferred Qualifications:
+- Experience with Docker and containerization
+- Familiarity with cloud platforms (AWS, GCP, or Azure)
+- Knowledge of message queues (Redis, RabbitMQ, or Kafka)
+- Experience with CI/CD pipelines (GitHub Actions, Jenkins)
+- Understanding of system design fundamentals
+- Contributions to open-source projects
+
+Nice to Have:
+- Experience with TypeScript and Node.js
+- Familiarity with MongoDB or NoSQL databases
+- Knowledge of Kubernetes

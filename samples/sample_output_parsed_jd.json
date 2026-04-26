@@ -1,0 +1,110 @@
+{
+  "job_title": "Software Development Engineer Intern",
+  "company": "TechCorp Solutions",
+  "seniority_level": "Intern",
+  "summary": "Backend platform team role focused on building scalable microservices, optimizing database queries, and contributing to CI/CD pipelines.",
+  "skills": [
+    {
+      "name": "Python",
+      "category": "programming_language",
+      "required_level": "intermediate",
+      "requirement_type": "required"
+    },
+    {
+      "name": "Golang",
+      "category": "programming_language",
+      "required_level": "beginner",
+      "requirement_type": "required"
+    },
+    {
+      "name": "FastAPI",
+      "category": "framework",
+      "required_level": "beginner",
+      "requirement_type": "required"
+    },
+    {
+      "name": "SQL",
+      "category": "programming_language",
+      "required_level": "intermediate",
+      "requirement_type": "required"
+    },
+    {
+      "name": "PostgreSQL",
+      "category": "database",
+      "required_level": "intermediate",
+      "requirement_type": "required"
+    },
+    {
+      "name": "RESTful API Design",
+      "category": "methodology",
+      "required_level": "intermediate",
+      "requirement_type": "required"
+    },
+    {
+      "name": "Data Structures and Algorithms",
+      "category": "methodology",
+      "required_level": "intermediate",
+      "requirement_type": "required"
+    },
+    {
+      "name": "Git",
+      "category": "tool",
+      "required_level": "beginner",
+      "requirement_type": "required"
+    },
+    {
+      "name": "Docker",
+      "category": "devops",
+      "required_level": "beginner",
+      "requirement_type": "preferred"
+    },
+    {
+      "name": "AWS",
+      "category": "cloud",
+      "required_level": "beginner",
+      "requirement_type": "preferred"
+    },
+    {
+      "name": "Redis",
+      "category": "database",
+      "required_level": "beginner",
+      "requirement_type": "preferred"
+    },
+    {
+      "name": "CI/CD",
+      "category": "devops",
+      "required_level": "beginner",
+      "requirement_type": "preferred"
+    },
+    {
+      "name": "System Design",
+      "category": "methodology",
+      "required_level": "beginner",
+      "requirement_type": "preferred"
+    },
+    {
+      "name": "TypeScript",
+      "category": "programming_language",
+      "required_level": "beginner",
+      "requirement_type": "nice_to_have"
+    },
+    {
+      "name": "Node.js",
+      "category": "framework",
+      "required_level": "beginner",
+      "requirement_type": "nice_to_have"
+    },
+    {
+      "name": "MongoDB",
+      "category": "database",
+      "required_level": "beginner",
+      "requirement_type": "nice_to_have"
+    },
+    {
+      "name": "Kubernetes",
+      "category": "devops",
+      "required_level": "beginner",
+      "requirement_type": "nice_to_have"
+    }
+  ]
+}

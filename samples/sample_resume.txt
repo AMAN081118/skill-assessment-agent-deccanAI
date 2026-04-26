@@ -1,0 +1,50 @@
+AMAN KUMAR
+aman081118@gmail.com | +91 8115067089 | Jabalpur, Madhya Pradesh
+
+SUMMARY
+Pre-final year engineering student and high-agency builder focused on scalable backend
+architecture and AI-integrated software. Experienced in designing modular multi-agent
+systems, optimizing database infrastructure (PostgreSQL, pgvector), and deploying native
+backend engines. Passionate about rapid execution and shipping reliable.
+
+EDUCATION
+Indian Institute of Information Technology, Jabalpur — Aug 2023 - Present
+Bachelor of Technology in Smart Manufacturing — CPI: 7.9
+Relevant Coursework: Data Structures & Algorithms, Object-Oriented Programming,
+Artificial Intelligence, Database Management Systems, Computer Networks.
+
+WORK EXPERIENCE
+Software Development Intern — Rakumura IT Solutions — Jul 2025 - Oct 2025
+- Optimized backend data fetching by migrating heavy client-side joins to Supabase
+  PostgreSQL RPCs, reducing API response time by 40%.
+- Built a custom content management wrapper to remove heavy third-party dependencies,
+  shifting expensive logic to the server and improving overall page load speed by 30%.
+- Developed a full-stack admin dashboard using Next.js and Tailwind CSS, improving UI
+  responsiveness and streamlining complex entity management.
+
+PROJECTS
+Agentic AI Platform | Python, LangGraph, FastAPI, RAG, pgvector, React
+- Designed and built a modular multi-agent AI system using LangGraph orchestration,
+  supporting 3 domain-specific agents on a shared end-to-end ML inference pipeline.
+- Implemented a Retrieval-Augmented Generation (RAG) memory system using
+  sentence-transformers embeddings and pgvector similarity search over PostgreSQL.
+- Integrated LLM inference (Llama 3.1 70B) with structured tool calling across 22
+  domain tools, with evaluation logging to track model performance.
+
+Reactive System Modeler | Vercel
+- Integrated a native C++ formal verification engine into a Node.js/Express backend
+  using Node-API (node-addon-api) to handle CPU-heavy graph calculations natively.
+- Built a custom, dependency-free React graphical editor using SVG Bezier curves and
+  CSS GPU transforms to maintain 60 FPS during drag-and-drop interactions.
+
+TECHNICAL SKILLS
+Languages: C++, Python, SQL, JavaScript, TypeScript, Golang
+Frameworks: React, Next.js, Node.js, Express.js, Redux Toolkit, Zustand, Recoil, FastAPI
+Databases: PostgreSQL, MongoDB, Supabase, Redis, pgvector
+Tools: Git, Docker, GitHub, VS Code, Postman, Vercel, Cursor, Claude Code
+
+LEADERSHIP AND ACHIEVEMENTS
+Web Development Mentor, Programming Club, IIITDM Jabalpur — May 2024 - Present
+- Mentored 20+ students in modern web development.
+Event Coordinator, CosmicQuest, Abhikalpan'25 — Jan 2025 - Apr 2025
+- Designed and managed a national-level competition attracting 140+ registered teams.

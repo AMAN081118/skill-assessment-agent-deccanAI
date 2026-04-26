@@ -1,0 +1,56 @@
+{
+  "candidate_name": "Aman Kumar",
+  "target_role": "Software Development Engineer Intern",
+  "overall_match_score": 72.5,
+  "total_estimated_hours": 68.0,
+  "estimated_weeks": 6.8,
+  "quick_wins": [
+    "CI/CD: Novice to Beginner (~14 hours)",
+    "Kubernetes: Novice to Beginner (~16 hours)",
+    "AWS: Novice to Beginner (~19 hours)",
+    "System Design: Novice to Beginner (~19 hours)"
+  ],
+  "long_term_goals": [],
+  "strengths_summary": "Strong in 10 areas: Python: Intermediate (meets requirement); FastAPI: Intermediate (exceeds requirement); PostgreSQL: Advanced (exceeds requirement); Git: Intermediate (exceeds requirement); TypeScript: Intermediate (exceeds requirement)",
+  "learning_paths": [
+    {
+      "skill_name": "CI/CD",
+      "current_level": "novice",
+      "target_level": "beginner",
+      "priority": "medium",
+      "total_estimated_hours": 14.0,
+      "why_learn": "CI/CD is a core skill for any backend engineer. Automating your build, test, and deployment pipeline will make you a more productive contributor from day one.",
+      "leverage_existing": [
+        "Your Docker experience means you already understand containerized environments that CI/CD pipelines deploy to.",
+        "Your Git proficiency means you are already comfortable with the branching and merging workflows that trigger CI/CD pipelines."
+      ],
+      "milestones": [
+        {
+          "title": "Understand CI/CD Fundamentals",
+          "description": "Learn what continuous integration and deployment means, why it matters, and the key concepts.",
+          "target_level": "beginner",
+          "estimated_hours": 14,
+          "resources": [
+            {
+              "title": "GitHub Actions Quickstart",
+              "url": "https://docs.github.com/en/actions/quickstart",
+              "resource_type": "documentation",
+              "is_free": true,
+              "estimated_hours": 3,
+              "description": "Official GitHub Actions tutorial to set up your first workflow"
+            },
+            {
+              "title": "CI/CD Pipeline Tutorial - TechWorld with Nana",
+              "url": "https://www.youtube.com/watch?v=R8_veQiYBjI",
+              "resource_type": "video",
+              "is_free": true,
+              "estimated_hours": 2,
+              "description": "Comprehensive video walkthrough of CI/CD concepts and implementation"
+            }
+          ],
+          "practice_project": "Set up a GitHub Actions workflow for one of your existing projects that runs tests on every push and deploys to Vercel on merge to main."
+        }
+      ]
+    }
+  ]
+}

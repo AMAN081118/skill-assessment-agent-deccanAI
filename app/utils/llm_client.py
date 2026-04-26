@@ -70,7 +70,7 @@ def get_groq_llm(
 
 
 def get_openrouter_llm(
-    model: str = "openrouter/free",
+    model: str = "nvidia/nemotron-3-super-120b-a12b:free",
     temperature: float = 0.3,
     max_tokens: int = 6000,
 ) -> ChatOpenAI:

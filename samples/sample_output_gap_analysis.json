@@ -1,0 +1,63 @@
+{
+  "overall_match_score": 72.5,
+  "gaps": [
+    {
+      "skill_name": "AWS",
+      "required_level": "beginner",
+      "current_level": "novice",
+      "gap_size": 1,
+      "priority": "medium",
+      "requirement_type": "preferred",
+      "adjacent_skills": [],
+      "learnability_score": 0.1,
+      "estimated_hours": 19.0
+    },
+    {
+      "skill_name": "CI/CD",
+      "required_level": "beginner",
+      "current_level": "novice",
+      "gap_size": 1,
+      "priority": "medium",
+      "requirement_type": "preferred",
+      "adjacent_skills": ["Docker", "Git"],
+      "learnability_score": 0.6,
+      "estimated_hours": 14.0
+    },
+    {
+      "skill_name": "System Design",
+      "required_level": "beginner",
+      "current_level": "novice",
+      "gap_size": 1,
+      "priority": "medium",
+      "requirement_type": "preferred",
+      "adjacent_skills": [],
+      "learnability_score": 0.1,
+      "estimated_hours": 19.0
+    },
+    {
+      "skill_name": "Kubernetes",
+      "required_level": "beginner",
+      "current_level": "novice",
+      "gap_size": 1,
+      "priority": "low",
+      "requirement_type": "nice_to_have",
+      "adjacent_skills": ["Docker"],
+      "learnability_score": 0.4,
+      "estimated_hours": 16.0
+    }
+  ],
+  "strengths": [
+    "Python: Intermediate (meets Intermediate requirement)",
+    "FastAPI: Intermediate (exceeds Beginner requirement)",
+    "SQL: Intermediate (meets Intermediate requirement)",
+    "PostgreSQL: Advanced (exceeds Intermediate requirement)",
+    "Git: Intermediate (exceeds Beginner requirement)",
+    "TypeScript: Intermediate (exceeds Beginner requirement)",
+    "Node.js: Intermediate (exceeds Beginner requirement)",
+    "Docker: Beginner (meets Beginner requirement)",
+    "Redis: Beginner (meets Beginner requirement)",
+    "MongoDB: Beginner (meets Beginner requirement)"
+  ],
+  "total_estimated_hours": 68.0,
+  "summary": "Overall match: 73%. Found 4 skill gap(s) including 0 critical and 0 high priority. The candidate excels in 10 area(s)."
+}

@@ -873,34 +873,6 @@ elif st.session_state.current_step == "results":
                     
                     st.rerun()
 
-    # ── PDF Export ──
-    st.markdown("<br>", unsafe_allow_html=True)
-    with st.container(border=True):
-        st.markdown("### Export Report")
-        st.caption("Download a complete PDF report with assessment results, gap analysis, and your personalized learning plan.")
-
-        col_pdf1, col_pdf2, col_pdf3 = st.columns([1, 2, 1])
-        with col_pdf2:
-            if st.button("Generate PDF Report", type="primary", use_container_width=True):
-                with st.spinner("Generating PDF..."):
-                    from app.utils.modern_pdf_generator import generate_pdf
-
-                    pdf_bytes = generate_pdf(
-                        learning_plan,
-                        gap_analysis,
-                        st.session_state.assessment_results or []
-                    )
-
-                    st.session_state.pdf_bytes = pdf_bytes
-
-            if "pdf_bytes" in st.session_state and st.session_state.pdf_bytes:
-                st.download_button(
-                    "Download PDF",
-                    st.session_state.pdf_bytes,
-                    file_name="report.pdf",
-                    mime="application/pdf"
-                )
-
     # ── Strengths Summary ──
     if learning_plan.strengths_summary:
         st.markdown("<br>", unsafe_allow_html=True)

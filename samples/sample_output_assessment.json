@@ -1,0 +1,38 @@
+{
+  "assessment_results": [
+    {
+      "skill_name": "Python",
+      "claimed_level": "intermediate",
+      "assessed_level": "intermediate",
+      "confidence": 0.87,
+      "questions_asked": 3,
+      "responses": [
+        {
+          "skill_name": "Python",
+          "question": "Explain the difference between a list and a tuple in Python. When would you choose one over the other?",
+          "candidate_answer": "Lists are mutable and tuples are immutable. I use tuples when I want to make sure data doesn't change, like returning multiple values from a function or using as dictionary keys. Lists are for collections that need to be modified.",
+          "score": 4,
+          "reasoning": "Correct explanation with practical use cases. Shows solid beginner-level understanding with good application awareness.",
+          "difficulty": "beginner"
+        },
+        {
+          "skill_name": "Python",
+          "question": "You have a FastAPI endpoint that processes large CSV uploads. Users report it times out on files over 50MB. How would you debug and fix this?",
+          "candidate_answer": "I would use background tasks with FastAPI's BackgroundTasks or Celery for async processing. Stream the file instead of loading it all into memory using chunked reading. Return a 202 Accepted with a task ID, then let the client poll for status. Could also add upload size validation middleware.",
+          "score": 4,
+          "reasoning": "Strong answer demonstrating practical experience with async patterns, streaming, and API design. Shows intermediate-level problem solving.",
+          "difficulty": "intermediate"
+        },
+        {
+          "skill_name": "Python",
+          "question": "Explain Python's Global Interpreter Lock (GIL). How does it affect multi-threaded applications, and what strategies would you use for CPU-bound tasks?",
+          "candidate_answer": "The GIL is a mutex that allows only one thread to execute Python bytecode at a time. For CPU-bound tasks, threads don't give true parallelism. I would use multiprocessing module instead, or use asyncio for I/O-bound tasks. Could also use C extensions that release the GIL.",
+          "score": 3,
+          "reasoning": "Mostly correct understanding of GIL and its implications. Knows the standard workarounds. Could go deeper on internals but demonstrates working knowledge.",
+          "difficulty": "advanced"
+        }
+      ],
+      "summary": "Assessed at intermediate level for Python (claimed intermediate). Candidate performed at their claimed level with an average score of 3.7/5 across 3 questions."
+    }
+  ]
+}
