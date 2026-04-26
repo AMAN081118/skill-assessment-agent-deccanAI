@@ -2,6 +2,8 @@
 
 An AI agent that takes a **Job Description** and a **candidate's resume**, conversationally assesses real proficiency on each required skill, identifies gaps, and generates a **personalized learning plan** with curated resources and time estimates.
 
+# Visit : [text](https://skillscopeai.streamlit.app/)
+
 ## Features & UI Showcase
 
 _Note: Replace the placeholder links below with the actual paths to your screenshots._
@@ -16,7 +18,6 @@ _An interactive radar chart plotting the JD's required proficiency levels agains
 
 **3. Adaptive Conversational Assessment**
 _The Assessor Agent conducts a real-time technical interview, dynamically adjusting question difficulty based on the candidate's answers._
-![Assessment Chat](docs/images/assessment_chat.png) _(Placeholder for assessment interface)_
 
 **4. Prioritized Skill Gap Analysis**
 _Clear identification of Critical, High, Medium, and Low priority gaps, factoring in "Learnability" based on adjacent skills._
@@ -96,7 +97,7 @@ Learning paths are not generic; they account for the candidate's existing knowle
 
 ### Prerequisites
 
-- Python 3.10+
+- Python 3.13+
 - Groq API Key (free at [console.groq.com](https://console.groq.com))
 - OpenRouter API Key
 
