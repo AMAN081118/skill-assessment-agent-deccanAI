@@ -6,8 +6,6 @@ An AI agent that takes a **Job Description** and a **candidate's resume**, conve
 
 ## Features & UI Showcase
 
-_Note: Replace the placeholder links below with the actual paths to your screenshots._
-
 **1. Document Upload & Parsing**
 _Upload a candidate's resume and a target Job Description to instantly extract and map required vs. claimed skills._
 ![alt text](public/assets/image.png)
