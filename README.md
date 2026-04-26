@@ -2,7 +2,7 @@
 
 An AI agent that takes a **Job Description** and a **candidate's resume**, conversationally assesses real proficiency on each required skill, identifies gaps, and generates a **personalized learning plan** with curated resources and time estimates.
 
-# Visit : [(https://skillscopeai.streamlit.app/](https://skillscopeai.streamlit.app/)
+# Visit : [https://skillscopeai.streamlit.app/](https://skillscopeai.streamlit.app/)
 
 ## Features & UI Showcase
 
